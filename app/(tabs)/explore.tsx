@@ -1,7 +1,8 @@
 import { Image } from 'expo-image';
 import { Platform, StyleSheet } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FlatList, TextInput, View, Text } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Collapsible } from '@/components/Collapsible';
 import { ExternalLink } from '@/components/ExternalLink';
@@ -27,6 +28,18 @@ const COLORANTS = [
 
 export default function TabTwoScreen() {
   const [costs, setCosts] = useState<{ [key: string]: string }>({});
+
+  // Load costs from storage on mount
+  useEffect(() => {
+    AsyncStorage.getItem('colorantCosts').then(data => {
+      if (data) setCosts(JSON.parse(data));
+    });
+  }, []);
+
+  // Save costs to storage whenever they change
+  useEffect(() => {
+    AsyncStorage.setItem('colorantCosts', JSON.stringify(costs));
+  }, [costs]);
 
   const renderItem = ({ item }: { item: typeof COLORANTS[0] }) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 4 }}>
