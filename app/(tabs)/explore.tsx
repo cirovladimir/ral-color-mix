@@ -92,7 +92,7 @@ export default function TabTwoScreen() {
         />
       }>
       <ThemedText type="subtitle" style={{ marginTop: 16, marginBottom: 8 }}>
-        Captura el precio de compra de los colorantes:
+        Precio de Compra:
       </ThemedText>
       <FlatList
         data={COLORANTS}
