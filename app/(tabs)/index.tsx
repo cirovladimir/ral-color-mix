@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { FlatList, TextInput, View, Text, StyleSheet } from 'react-native';
+import { FlatList, TextInput, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 
-import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -25,6 +25,7 @@ const COLORANTS = [
 
 export default function HomeScreen() {
   const [points, setPoints] = useState<{ [key: string]: { y: string; pts: string } }>({});
+  const router = useRouter();
 
   // Load points from storage on mount
   useEffect(() => {
@@ -76,6 +77,13 @@ export default function HomeScreen() {
     </View>
   );
 
+  const handleReport = () => {
+    router.push({
+      pathname: '/ral-report',
+      params: { points: JSON.stringify(points) }
+    });
+  };
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -100,6 +108,9 @@ export default function HomeScreen() {
         renderItem={renderItem}
         scrollEnabled={false}
       />
+      <TouchableOpacity style={styles.button} onPress={handleReport}>
+        <Text style={styles.buttonText}>Calcular</Text>
+      </TouchableOpacity>
     </ParallaxScrollView>
   );
 }
@@ -157,5 +168,19 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     width: 60,
+  },
+  button: {
+    marginTop: 24,
+    backgroundColor: '#0a7ea4',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    alignSelf: 'center',
+    width: 220,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 18,
   },
 });
