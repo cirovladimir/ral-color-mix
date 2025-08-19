@@ -22,6 +22,7 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
+        <Stack.Screen name="ral-report" options={{title: '', headerBackTitle: 'Regresar'}} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

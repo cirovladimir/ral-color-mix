@@ -36,7 +36,7 @@ export default function RalReportScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <ThemedText type="title" style={{ marginBottom: 16 }}>
-        Reporte de Costo de Producción RAL
+        Costo de Producción RAL
       </ThemedText>
       <View style={styles.table}>
         <Row label="Costo Total Colorantes" value={`$${colorantTotal.toFixed(2)}`} />
