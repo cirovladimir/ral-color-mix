@@ -25,12 +25,16 @@ const COLORANTS = [
 
 export default function HomeScreen() {
   const [points, setPoints] = useState<{ [key: string]: { y: string; pts: string } }>({});
+  const [costs, setCosts] = useState<{ [key: string]: string }>({});
   const router = useRouter();
 
   // Load points from storage on mount
   useEffect(() => {
     AsyncStorage.getItem('colorantPoints').then(data => {
       if (data) setPoints(JSON.parse(data));
+    });
+    AsyncStorage.getItem('colorantCosts').then(data => {
+      if (data) setCosts(JSON.parse(data));
     });
   }, []);
 
@@ -78,9 +82,17 @@ export default function HomeScreen() {
   );
 
   const handleReport = () => {
+    // Merge costs into points for each colorant
+    const mergedPoints = Object.fromEntries(
+      Object.entries(points).map(([name, values]) => [
+        name,
+        { ...values, cost: costs[name] || '' }
+      ])
+    );
+
     router.push({
       pathname: '/ral-report',
-      params: { points: JSON.stringify(points) }
+      params: { points: JSON.stringify(mergedPoints) }
     });
   };
 

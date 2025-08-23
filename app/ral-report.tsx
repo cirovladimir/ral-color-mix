@@ -11,7 +11,7 @@ const SALES_PRICE = 948.28;
 export default function RalReportScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  let points: { [key: string]: { y: string; pts: string } } = {};
+  let points: { [key: string]: { y: string; pts: string; cost: string } } = {};
 
   try {
     points = params.points ? JSON.parse(params.points as string) : {};
@@ -22,8 +22,8 @@ export default function RalReportScreen() {
   // Example: Each point is $5.00, each Y is $2.50 (replace with your real logic)
   const getColorantTotal = () => {
     let total = 0;
-    Object.values(points).forEach(({ y, pts }) => {
-      total += (parseFloat(y || '0') * 2.5) + (parseFloat(pts || '0') * 5.0);
+    Object.values(points).forEach(({ y, pts, cost }) => {
+      total += ((parseFloat(y || '0') * 48)+parseFloat(pts || '0')) * parseFloat(cost || '0') / 1536;
     });
     return total;
   };
