@@ -3,10 +3,19 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
-import { FlatList, StyleSheet, Text, View, Image } from 'react-native';
+import { FlatList, StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 
 export default function RalMixesScreen() {
-  const [mixes, setMixes] = useState<any[]>([]);
+  const [mixes, setMixes] = useState<{ [key: string]: { 
+    name: string, 
+    points: any,
+    colorantTotal: number,
+    totalBaseColorant: number,
+    utilidad: number,
+    total: number
+  } }>({});
+  const router = useRouter();
 
   useEffect(() => {
     AsyncStorage.getItem('ralColorMixes').then(data => {
@@ -15,9 +24,27 @@ export default function RalMixesScreen() {
   }, []);
 
   const renderItem = ({ item }: { item: any }) => (
-    <View style={styles.mixRow}>
-      <Text style={styles.mixName}>{item.name || 'Sin nombre'}</Text>
-      <Text style={styles.mixDetails}>{JSON.stringify(item.details)}</Text>
+    <View style={styles.tableRow}>
+      <View style={styles.tableCellLeft}>
+        <Text style={styles.mixId}>{item.key}</Text>
+        <Text style={styles.mixName}>{item.name}</Text>
+      </View>
+      <View style={styles.tableCellRight}>
+        <TouchableOpacity
+          style={styles.loadButton}
+          onPress={() =>
+            router.push({
+              pathname: '/ral-report',
+              params: {
+                points: JSON.stringify(item.points),
+                // You can pass other mix data as needed
+              },
+            })
+          }
+        >
+          <Text style={styles.buttonText}>Cargar</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -25,18 +52,22 @@ export default function RalMixesScreen() {
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#E0E0E0', dark: '#222' }}
       headerImage={
-      <Image
-                source={require('@/assets/images/ral-color-table.png')}
-                style={styles.reactLogo}
-              />
-            }
+        <Image
+          source={require('@/assets/images/ral-color-table.png')}
+          style={styles.reactLogo}
+        />
+      }
     >
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">RAL Color Mixes</ThemedText>
       </ThemedView>
+      <View style={styles.tableHeader}>
+        <Text style={[styles.headerText, { flex: 2 }]}>ID y Nombre</Text>
+        <Text style={[styles.headerText, { flex: 1 }]}>Acción</Text>
+      </View>
       <FlatList
-        data={mixes}
-        keyExtractor={(_, idx) => idx.toString()}
+        data={Object.entries(mixes).map(([key, value]) => ({ key, ...value }))}
+        keyExtractor={item => item.key}
         renderItem={renderItem}
         ListEmptyComponent={
           <Text style={{ textAlign: 'center', marginTop: 32 }}>
@@ -53,18 +84,52 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     alignItems: 'center',
   },
-  mixRow: {
-    padding: 12,
+  tableHeader: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#f0f0f0',
     borderBottomWidth: 1,
-    borderColor: '#eee',
+    borderColor: '#ddd',
   },
-  mixName: {
+  headerText: {
     fontWeight: 'bold',
     fontSize: 16,
   },
-  mixDetails: {
+  tableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderColor: '#eee',
+  },
+  tableCellLeft: {
+    flex: 2,
+    flexDirection: 'column',
+  },
+  tableCellRight: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  mixId: {
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  mixName: {
     color: '#555',
-    marginTop: 4,
+    fontSize: 14,
+    marginTop: 2,
+  },
+  loadButton: {
+    backgroundColor: '#0a7ea4',
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    borderRadius: 6,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
   reactLogo: {
     width: "100%",
