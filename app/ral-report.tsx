@@ -30,7 +30,7 @@ export default function RalReportScreen() {
 
   const colorantTotal = getColorantTotal();
   const totalBaseColorant = BASE_COST + colorantTotal;
-  const utilidad = ((SALES_PRICE - totalBaseColorant) / totalBaseColorant) * 100;
+  const utilidad = (1-(totalBaseColorant/SALES_PRICE))*100;
   const total = SALES_PRICE - totalBaseColorant;
 
   // Helper to format with IVA
