@@ -33,21 +33,29 @@ export default function RalReportScreen() {
   const utilidad = ((SALES_PRICE - totalBaseColorant) / totalBaseColorant) * 100;
   const total = SALES_PRICE - totalBaseColorant;
 
+  // Helper to format with IVA
+  const withIVA = (value: number) => `$${(value * 1.16).toFixed(2)}`;
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <ThemedText type="title" style={{ marginBottom: 16 }}>
         Costo de Producción RAL
       </ThemedText>
       <View style={styles.table}>
-        <Row label="Costo Total Colorantes" value={`$${colorantTotal.toFixed(2)}`} />
-        <Row label="Precio de Lista de Base" value={`$${BASE_LIST_PRICE.toFixed(2)}`} />
-        <Row label="Descuento Semestral" value={''} />
-        <Row label="Costo de Base" value={`$${BASE_COST.toFixed(2)}`} />
-        <Row label="TOTAL BASE  +  COLORANTE" value={`$${totalBaseColorant.toFixed(2)}`} />
-        <Row label="Precio de Venta" value={`$${SALE_PRICE.toFixed(2)}`} />
-        <Row label="PRECIO DE VENTAS" value={`$${SALES_PRICE.toFixed(2)}`} />
-        <Row label="UTILIDAD EN %" value={`${utilidad.toFixed(0)}%`} />
-        <Row label="TOTAL" value={`$${total.toFixed(2)}`} />
+        <View style={styles.headerRow}>
+          <Text style={styles.cellLabel}>Concepto</Text>
+          <Text style={styles.cellValue}>Valor</Text>
+          <Text style={styles.cellValue}>+IVA</Text>
+        </View>
+        <Row label="Costo Total Colorantes" value={`$${colorantTotal.toFixed(2)}`} iva={withIVA(colorantTotal)} />
+        <Row label="Precio de Lista de Base" value={`$${BASE_LIST_PRICE.toFixed(2)}`} iva={withIVA(BASE_LIST_PRICE)} />
+        <Row label="Descuento Semestral" value={''} iva={''} />
+        <Row label="Costo de Base" value={`$${BASE_COST.toFixed(2)}`} iva={withIVA(BASE_COST)} />
+        <Row label="TOTAL BASE  +  COLORANTE" value={`$${totalBaseColorant.toFixed(2)}`} iva={withIVA(totalBaseColorant)} />
+        <Row label="Precio de Venta" value={`$${SALE_PRICE.toFixed(2)}`} iva={withIVA(SALE_PRICE)} />
+        <Row label="PRECIO DE VENTAS" value={`$${SALES_PRICE.toFixed(2)}`} iva={withIVA(SALES_PRICE)} />
+        <Row label="UTILIDAD EN %" value={`${utilidad.toFixed(0)}%`} iva={''} />
+        <Row label="TOTAL" value={`$${total.toFixed(2)}`} iva={withIVA(total)} />
       </View>
       <TouchableOpacity style={styles.button} onPress={() => router.back()}>
         <Text style={styles.buttonText}>Regresar</Text>
@@ -56,11 +64,12 @@ export default function RalReportScreen() {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value, iva }: { label: string; value: string; iva: string }) {
   return (
     <View style={styles.row}>
       <Text style={styles.cellLabel}>{label}</Text>
       <Text style={styles.cellValue}>{value}</Text>
+      <Text style={styles.cellValue}>{iva}</Text>
     </View>
   );
 }
@@ -110,5 +119,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 18,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 2,
+    borderColor: '#aaa',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#e0e0e0',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
 });
