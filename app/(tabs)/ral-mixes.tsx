@@ -2,9 +2,10 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
-import { FlatList, StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function RalMixesScreen() {
   const [mixes, setMixes] = useState<{ [key: string]: { 
@@ -17,11 +18,14 @@ export default function RalMixesScreen() {
   } }>({});
   const router = useRouter();
 
-  useEffect(() => {
-    AsyncStorage.getItem('ralColorMixes').then(data => {
-      if (data) setMixes(JSON.parse(data));
-    });
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.getItem('ralColorMixes').then(data => {
+        if (data) setMixes(JSON.parse(data));
+        else setMixes({});
+      });
+    }, [])
+  );
 
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.tableRow}>
@@ -37,7 +41,6 @@ export default function RalMixesScreen() {
               pathname: '/ral-report',
               params: {
                 points: JSON.stringify(item.points),
-                // You can pass other mix data as needed
               },
             })
           }
@@ -52,10 +55,10 @@ export default function RalMixesScreen() {
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#E0E0E0', dark: '#222' }}
       headerImage={
-        <Image
-          source={require('@/assets/images/ral-color-table.png')}
-          style={styles.reactLogo}
-        />
+      <Image
+        source={require('@/assets/images/ral-color-table.png')}
+        style={styles.reactLogo}
+      />
       }
     >
       <ThemedView style={styles.titleContainer}>
@@ -65,16 +68,16 @@ export default function RalMixesScreen() {
         <Text style={[styles.headerText, { flex: 2 }]}>ID y Nombre</Text>
         <Text style={[styles.headerText, { flex: 1 }]}>Acción</Text>
       </View>
-      <FlatList
-        data={Object.entries(mixes).map(([key, value]) => ({ key, ...value }))}
-        keyExtractor={item => item.key}
-        renderItem={renderItem}
-        ListEmptyComponent={
-          <Text style={{ textAlign: 'center', marginTop: 32 }}>
-            No RAL mixes saved yet.
-          </Text>
-        }
-      />
+    <FlatList
+      data={Object.entries(mixes).map(([key, value]) => ({ key, ...value }))}
+      keyExtractor={item => item.key}
+      renderItem={renderItem}
+      ListEmptyComponent={
+        <Text style={{ textAlign: 'center', marginTop: 32 }}>
+          No RAL mixes saved yet.
+        </Text>
+      }
+    />
     </ParallaxScrollView>
   );
 }
