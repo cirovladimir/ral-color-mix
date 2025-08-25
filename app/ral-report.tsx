@@ -1,13 +1,11 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput, Modal } from 'react-native';
-import { ThemedText } from '../components/ThemedText';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ThemedText } from '../components/ThemedText';
 
 const BASE_LIST_PRICE = 298.31;
 const BASE_COST = 298.31;
-const SALE_PRICE = 1100.0;
-const SALES_PRICE = 948.28;
 
 export default function RalReportScreen() {
   const router = useRouter();
@@ -20,12 +18,13 @@ export default function RalReportScreen() {
     utilidad: number,
     total: number
   } }>({});
-  let points: { [key: string]: { y: string; pts: string; cost: string } } = {};
+  const [points, setPoints] = useState<{ [key: string]: { y: string; pts: string; cost: string } }>({});
 
   // Modal state for saving
   const [modalVisible, setModalVisible] = useState(false);
   const [mixId, setMixId] = useState('');
   const [mixName, setMixName] = useState('');
+  const [salePrice, setSalePrice] = useState<string>('1000.00'); // Default value
 
   // Load existing mixes on mount
   useEffect(() => {
@@ -34,11 +33,14 @@ export default function RalReportScreen() {
     });
   }, []);
 
-  try {
-    points = params.points ? JSON.parse(params.points as string) : {};
-  } catch {
-    points = {};
-  }
+  // Set salePrice from params only once
+  useEffect(() => {
+    if (params.mix) {
+      const mix = JSON.parse(params.mix as string);
+      setPoints(mix.points || {});
+      setSalePrice(mix.salePrice ? (mix.salePrice * 1.16).toFixed(2) : '1000.00');
+    }
+  }, [params.mix]);
 
   const getColorantTotal = () => {
     let total = 0;
@@ -50,8 +52,10 @@ export default function RalReportScreen() {
 
   const colorantTotal = getColorantTotal();
   const totalBaseColorant = BASE_COST + colorantTotal;
-  const utilidad = (1 - (totalBaseColorant / SALES_PRICE)) * 100;
-  const total = SALES_PRICE - totalBaseColorant;
+  const salePriceNumber = parseFloat(salePrice || '0') / 1.16; // Remove IVA
+  const salesPrice = salePriceNumber / 1.16; // IVA discount (business rule)
+  const utilidad = (1 - (totalBaseColorant / salesPrice)) * 100;
+  const total = salesPrice - totalBaseColorant;
 
   // Helper to format with IVA
   const withIVA = (value: number) => `$${(value * 1.16).toFixed(2)}`;
@@ -74,6 +78,7 @@ export default function RalReportScreen() {
       totalBaseColorant,
       utilidad,
       total,
+      salePrice: salePriceNumber,
       date: new Date().toISOString(),
     };
     // Load existing mixes
@@ -97,6 +102,16 @@ export default function RalReportScreen() {
       <ThemedText type="title" style={{ marginBottom: 16 }}>
         Costo de Producción RAL
       </ThemedText>
+      <View style={styles.inputRow}>
+        <Text style={styles.inputLabel}>Precio de Venta (con IVA):</Text>
+        <TextInput
+          style={styles.inputSalePrice}
+          keyboardType="numeric"
+          value={salePrice}
+          onChangeText={setSalePrice}
+          placeholder="Precio de Venta"
+        />
+      </View>
       <View style={styles.table}>
         <View style={styles.headerRow}>
           <Text style={styles.cellLabel}>Concepto</Text>
@@ -108,10 +123,10 @@ export default function RalReportScreen() {
         <Row label="Descuento Semestral" value={''} iva={''} />
         <Row label="Costo de Base" value={`$${BASE_COST.toFixed(2)}`} iva={withIVA(BASE_COST)} />
         <Row label="TOTAL BASE  +  COLORANTE" value={`$${totalBaseColorant.toFixed(2)}`} iva={withIVA(totalBaseColorant)} />
-        <Row label="Precio de Venta" value={`$${SALE_PRICE.toFixed(2)}`} iva={withIVA(SALE_PRICE)} />
-        <Row label="PRECIO DE VENTAS" value={`$${SALES_PRICE.toFixed(2)}`} iva={withIVA(SALES_PRICE)} />
+        <Row label="Precio de Venta" value={`$${salePriceNumber.toFixed(2)}`} iva={withIVA(salePriceNumber)} />
+        <Row label="PRECIO DE VENTAS" value={`$${salesPrice.toFixed(2)}`} iva={withIVA(salesPrice)} />
         <Row label="UTILIDAD EN %" value={`${utilidad.toFixed(0)}%`} iva={''} />
-        <Row label="TOTAL" value={`$${total.toFixed(2)}`} iva={withIVA(total)} />
+        <Row label="UTILIDAD TOTAL" value={`$${total.toFixed(2)}`} iva={withIVA(total)} />
       </View>
       <View style={styles.buttonRow}>
         <TouchableOpacity style={styles.button} onPress={handleSaveMix}>
@@ -173,6 +188,25 @@ const styles = StyleSheet.create({
     padding: 24,
     backgroundColor: '#fff',
     flexGrow: 1,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginRight: 8,
+  },
+  inputSalePrice: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 4,
+    padding: 8,
+    fontSize: 16,
+    width: 120,
+    backgroundColor: '#fff',
   },
   table: {
     borderWidth: 1,

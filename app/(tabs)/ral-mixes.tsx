@@ -14,7 +14,8 @@ export default function RalMixesScreen() {
     colorantTotal: number,
     totalBaseColorant: number,
     utilidad: number,
-    total: number
+    total: number,
+    salePrice: number
   } }>({});
   const router = useRouter();
 
@@ -40,7 +41,7 @@ export default function RalMixesScreen() {
             router.push({
               pathname: '/ral-report',
               params: {
-                points: JSON.stringify(item.points),
+                mix: JSON.stringify(item),
               },
             })
           }

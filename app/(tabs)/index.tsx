@@ -92,7 +92,7 @@ export default function HomeScreen() {
 
     router.push({
       pathname: '/ral-report',
-      params: { points: JSON.stringify(mergedPoints) }
+      params: { mix: JSON.stringify({ points: mergedPoints, salePrice: 1000 }) }
     });
   };
 
