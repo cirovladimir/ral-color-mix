@@ -6,6 +6,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 
 export default function RalMixesScreen() {
   const [mixes, setMixes] = useState<{ [key: string]: { 
@@ -28,28 +29,47 @@ export default function RalMixesScreen() {
     }, [])
   );
 
+  // Delete handler
+  const handleDelete = async (key: string) => {
+    const updatedMixes = { ...mixes };
+    delete updatedMixes[key];
+    setMixes(updatedMixes);
+    await AsyncStorage.setItem('ralColorMixes', JSON.stringify(updatedMixes));
+  };
+
+  const renderRightActions = (item: any) => (
+    <TouchableOpacity
+      style={styles.deleteButton}
+      onPress={() => handleDelete(item.key)}
+    >
+      <Text style={styles.deleteButtonText}>Eliminar</Text>
+    </TouchableOpacity>
+  );
+
   const renderItem = ({ item }: { item: any }) => (
-    <View style={styles.tableRow}>
-      <View style={styles.tableCellLeft}>
-        <Text style={styles.mixId}>{item.key}</Text>
-        <Text style={styles.mixName}>{item.name}</Text>
+    <Swipeable renderRightActions={() => renderRightActions(item)}>
+      <View style={styles.tableRow}>
+        <View style={styles.tableCellLeft}>
+          <Text style={styles.mixId}>{item.key}</Text>
+          <Text style={styles.mixName}>{item.name}</Text>
+        </View>
+        <View style={styles.tableCellRight}>
+          <TouchableOpacity
+            style={styles.loadButton}
+            onPress={() =>
+              router.push({
+                pathname: '/ral-report',
+                params: {
+                  mix: JSON.stringify(item),
+                },
+              })
+            }
+          >
+            <Text style={styles.buttonText}>Cargar</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-      <View style={styles.tableCellRight}>
-        <TouchableOpacity
-          style={styles.loadButton}
-          onPress={() =>
-            router.push({
-              pathname: '/ral-report',
-              params: {
-                mix: JSON.stringify(item),
-              },
-            })
-          }
-        >
-          <Text style={styles.buttonText}>Cargar</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </Swipeable>
   );
 
   return (
@@ -140,5 +160,18 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     position: 'absolute',
+  },
+  deleteButton: {
+    backgroundColor: '#d32f2f',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 90,
+    height: '100%',
+    borderRadius: 6,
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
