@@ -25,6 +25,7 @@ export default function RalReportScreen() {
   const [mixId, setMixId] = useState('');
   const [mixName, setMixName] = useState('');
   const [salePrice, setSalePrice] = useState<string>('1000.00'); // Default value
+  const [editingMixInfo, setEditingMixInfo] = useState<{ id?: string; name?: string } | null>(null);
 
   // Load existing mixes on mount
   useEffect(() => {
@@ -39,6 +40,13 @@ export default function RalReportScreen() {
       const mix = JSON.parse(params.mix as string);
       setPoints(mix.points || {});
       setSalePrice(mix.salePrice ? (mix.salePrice * 1.16).toFixed(2) : '1000.00');
+      if (mix.id && mix.name) {
+        setEditingMixInfo({ id: mix.id, name: mix.name });
+      } else {
+        setEditingMixInfo(null);
+      }
+    } else {
+      setEditingMixInfo(null);
     }
   }, [params.mix]);
 
@@ -102,6 +110,19 @@ export default function RalReportScreen() {
       <ThemedText type="title" style={{ marginBottom: 16 }}>
         Costo de Producción RAL
       </ThemedText>
+      {editingMixInfo ? (
+        <View style={{ marginBottom: 12 }}>
+          <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#0a7ea4' }}>
+            Editando mix: {editingMixInfo.name} (ID: {editingMixInfo.id})
+          </Text>
+        </View>
+      ) : (
+        <View style={{ marginBottom: 12 }}>
+          <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#888' }}>
+            Creando un nuevo mix RAL
+          </Text>
+        </View>
+      )}
       <View style={styles.inputRow}>
         <Text style={styles.inputLabel}>Precio de Venta (con IVA):</Text>
         <TextInput
