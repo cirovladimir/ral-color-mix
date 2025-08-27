@@ -48,27 +48,23 @@ export default function RalMixesScreen() {
 
   const renderItem = ({ item }: { item: any }) => (
     <Swipeable renderRightActions={() => renderRightActions(item)}>
-      <View style={styles.tableRow}>
+      <TouchableOpacity
+        style={styles.tableRow}
+        activeOpacity={0.7}
+        onPress={() =>
+          router.push({
+            pathname: '/ral-report',
+            params: {
+              mix: JSON.stringify(item),
+            },
+          })
+        }
+      >
         <View style={styles.tableCellLeft}>
           <Text style={styles.mixId}>{item.key}</Text>
           <Text style={styles.mixName}>{item.name}</Text>
         </View>
-        <View style={styles.tableCellRight}>
-          <TouchableOpacity
-            style={styles.loadButton}
-            onPress={() =>
-              router.push({
-                pathname: '/ral-report',
-                params: {
-                  mix: JSON.stringify(item),
-                },
-              })
-            }
-          >
-            <Text style={styles.buttonText}>Cargar</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      </TouchableOpacity>
     </Swipeable>
   );
 
@@ -86,8 +82,8 @@ export default function RalMixesScreen() {
         <ThemedText type="title">RAL Color Mixes</ThemedText>
       </ThemedView>
       <View style={styles.tableHeader}>
-        <Text style={[styles.headerText, { flex: 2 }]}>ID y Nombre</Text>
-        <Text style={[styles.headerText, { flex: 1 }]}>Acción</Text>
+        <Text style={[styles.headerText, { flex: 2 }]}>Nombre</Text>
+        {/* Removed the "Acción" column */}
       </View>
     <FlatList
       data={Object.entries(mixes).map(([key, value]) => ({ key, ...value }))}
