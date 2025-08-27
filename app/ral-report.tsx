@@ -3,6 +3,22 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../components/ThemedText';
+import * as Print from 'expo-print';
+
+const COLORANTS = [
+  { name: 'Amarillo', code: 'AXX', color: '#FFF200' },
+  { name: 'Negro', code: 'B', color: '#000000' },
+  { name: 'Amarillo Oxido', code: 'C', color: '#FFD600' },
+  { name: 'Verde', code: 'D', color: '#009640' },
+  { name: 'Azul', code: 'E', color: '#009FE3' },
+  { name: 'Rojo Oxido', code: 'F', color: '#E37222' },
+  { name: 'Café Oxido', code: 'I', color: '#A98C66' },
+  { name: 'Sombra', code: 'L', color: '#8C7B5A' },
+  { name: 'Blanco', code: 'W', color: '#FFFFFF' },
+  { name: 'Magenta', code: 'V', color: '#FF00A6' },
+  { name: 'Amarillo Permanente', code: 'T', color: '#FFF200' },
+  { name: 'Rojo Exterior', code: 'R', color: '#FF0000' },
+];
 
 const BASE_LIST_PRICE_DEFAULT = 298.31;
 const BASE_COST_DEFAULT = 298.31;
@@ -111,9 +127,93 @@ export default function RalReportScreen() {
   };
 
   // Print handler (for now, just alert or implement sharing/printing as needed)
-  const handlePrint = () => {
-    alert('Función de impresión no implementada.');
-    // You can integrate expo-print or expo-sharing here if needed
+  const handlePrint = async () => {
+    // Generate colorant table rows with colored rectangles and codes
+    const colorantRows = COLORANTS
+      .map(colorant => {
+        const { name, code, color } = colorant;
+        const y = points[name]?.y || '0';
+        const pts = points[name]?.pts || '0';
+        return `
+          <tr>
+            <td style="border:1px solid #ddd; padding:8px; display:flex; align-items:center;background-color:${color || '#fff'};">
+              <span style="display:inline-block;width:18px;height:18px;background:${color || '#fff'};border-radius:4px;border:1px solid #ccc;margin-right:6px;vertical-align:middle;"></span>
+              <span style="font-weight:bold;">${code || ''}</span>
+              <span style="margin-left:8px;">${name}</span>
+            </td>
+            <td style="border:1px solid #ddd; padding:8px; text-align:right;">${y}</td>
+            <td style="border:1px solid #ddd; padding:8px; text-align:right;">${pts}</td>
+          </tr>
+        `;
+      })
+      .join('');
+
+    const printContent = `
+      <h1>Reporte de Costo de Producción RAL</h1>
+      <p><strong>Mix:</strong> ${editingMixInfo?.name} (ID: ${editingMixInfo?.id})</p>
+      <p><strong>Fecha:</strong> ${new Date().toLocaleString()}</p>
+      <h2>Tabla de Colorantes</h2>
+      <table style="width:100%; border-collapse:collapse; margin-bottom:24px;">
+        <tr style="background-color:#f2f2f2; font-weight:bold;">
+          <th style="border:1px solid #ddd; padding:8px;">Colorante</th>
+          <th style="border:1px solid #ddd; padding:8px;">Y's</th>
+          <th style="border:1px solid #ddd; padding:8px;">Puntos</th>
+        </tr>
+        ${colorantRows}
+      </table>
+      <h2>Detalles del Costo</h2>
+      <table style="width:100%; border-collapse:collapse;">
+        <tr style="background-color:#f2f2f2; font-weight:bold;">
+          <th style="border:1px solid #ddd; padding:8px;">Concepto</th>
+          <th style="border:1px solid #ddd; padding:8px;">Valor</th>
+          <th style="border:1px solid #ddd; padding:8px;">+IVA</th>
+        </tr>
+        <tr style="background-color:#fff;">
+          <td style="border:1px solid #ddd; padding:8px;">Costo Total Colorantes</td>
+          <td style="border:1px solid #ddd; padding:8px; text-align:right;">$${colorantTotal.toFixed(2)}</td>
+          <td style="border:1px solid #ddd; padding:8px; text-align:right;">${withIVA(colorantTotal)}</td>
+        </tr>
+        <tr style="background-color:#fff;">
+          <td style="border:1px solid #ddd; padding:8px;">Precio de Lista de Base</td>
+          <td style="border:1px solid #ddd; padding:8px; text-align:right;">$${baseListPriceNumber.toFixed(2)}</td>
+          <td style="border:1px solid #ddd; padding:8px; text-align:right;">${withIVA(baseListPriceNumber)}</td>
+        </tr>
+        <tr style="background-color:#fff;">
+          <td style="border:1px solid #ddd; padding:8px;">Descuento Semestral</td>
+          <td style="border:1px solid #ddd; padding:8px; text-align:right;">$0.00</td>
+          <td style="border:1px solid #ddd; padding:8px; text-align:right;">$0.00</td>
+        </tr>
+        <tr style="background-color:#fff;">
+          <td style="border:1px solid #ddd; padding:8px;">Costo de Base</td>
+          <td style="border:1px solid #ddd; padding:8px; text-align:right;">$${baseCostNumber.toFixed(2)}</td>
+          <td style="border:1px solid #ddd; padding:8px; text-align:right;">${withIVA(baseCostNumber)}</td>
+        </tr>
+        <tr style="background-color:#fff;">
+          <td style="border:1px solid #ddd; padding:8px;">TOTAL BASE  +  COLORANTE</td>
+          <td style="border:1px solid #ddd; padding:8px; text-align:right;">$${totalBaseColorant.toFixed(2)}</td>
+          <td style="border:1px solid #ddd; padding:8px; text-align:right;">${withIVA(totalBaseColorant)}</td>
+        </tr>
+        <tr style="background-color:#fff;">
+          <td style="border:1px solid #ddd; padding:8px;">Precio de Venta</td>
+          <td style="border:1px solid #ddd; padding:8px; text-align:right;">$${salePriceNumber.toFixed(2)}</td>
+          <td style="border:1px solid #ddd; padding:8px; text-align:right;">${withIVA(salePriceNumber)}</td>
+        </tr>
+        <tr style="background-color:#fff;">
+          <td style="border:1px solid #ddd; padding:8px;">PRECIO DE VENTAS</td>
+          <td style="border:1px solid #ddd; padding:8px; text-align:right;">$${salesPrice.toFixed(2)}</td>
+          <td style="border:1px solid #ddd; padding:8px; text-align:right;">${withIVA(salesPrice)}</td>
+        </tr>
+        <tr style="background-color:#fff;">
+          <td style="border:1px solid #ddd; padding:8px;">UTILIDAD EN %</td>
+          <td style="border:1px solid #ddd; padding:8px; text-align:right;">${utilidad.toFixed(0)}%</td>
+          <td style="border:1px solid #ddd; padding:8px; text-align:right;">$${total.toFixed(2)}</td>
+        </tr>
+      </table>
+      <p style="margin-top:20px; font-weight:bold;">Gracias por su preferencia.</p>
+    `;
+    await Print.printAsync({
+      html: printContent,
+    });
   };
 
   return (
