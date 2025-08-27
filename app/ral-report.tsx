@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../components/ThemedText';
 
-const BASE_LIST_PRICE = 298.31;
-const BASE_COST = 298.31;
+const BASE_LIST_PRICE_DEFAULT = 298.31;
+const BASE_COST_DEFAULT = 298.31;
 
 export default function RalReportScreen() {
   const router = useRouter();
@@ -26,6 +26,7 @@ export default function RalReportScreen() {
   const [mixName, setMixName] = useState('');
   const [salePrice, setSalePrice] = useState<string>('1000.00'); // Default value
   const [editingMixInfo, setEditingMixInfo] = useState<{ id?: string; name?: string } | null>(null);
+  const [baseListPrice, setBaseListPrice] = useState<string>(BASE_LIST_PRICE_DEFAULT.toString());
 
   // Load existing mixes on mount
   useEffect(() => {
@@ -40,6 +41,7 @@ export default function RalReportScreen() {
       const mix = JSON.parse(params.mix as string);
       setPoints(mix.points || {});
       setSalePrice(mix.salePrice ? (mix.salePrice * 1.16).toFixed(2) : '1000.00');
+      setBaseListPrice(mix.baselistPrice ? mix.baselistPrice.toString() : BASE_LIST_PRICE_DEFAULT.toString());
       if (mix.id && mix.name) {
         setEditingMixInfo({ id: mix.id, name: mix.name });
         setMixId(mix.id);      // Pre-populate ID
@@ -65,7 +67,9 @@ export default function RalReportScreen() {
   };
 
   const colorantTotal = getColorantTotal();
-  const totalBaseColorant = BASE_COST + colorantTotal;
+  const baseListPriceNumber = parseFloat(baseListPrice || '0');
+  const baseCostNumber = parseFloat(baseListPrice || '0');
+  const totalBaseColorant = baseListPriceNumber + colorantTotal;
   const salePriceNumber = parseFloat(salePrice || '0') / 1.16; // Remove IVA
   const salesPrice = salePriceNumber / 1.16; // IVA discount (business rule)
   const utilidad = (1 - (totalBaseColorant / salesPrice)) * 100;
@@ -88,6 +92,7 @@ export default function RalReportScreen() {
       id: mixId.trim(),
       name: mixName.trim(),
       points,
+      baselistPrice: baseListPriceNumber,
       colorantTotal,
       totalBaseColorant,
       utilidad,
@@ -119,16 +124,17 @@ export default function RalReportScreen() {
       {editingMixInfo ? (
         <View style={{ marginBottom: 12 }}>
           <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#0a7ea4' }}>
-            Editando mix: {editingMixInfo.name} (ID: {editingMixInfo.id})
+            {editingMixInfo.name} (ID: {editingMixInfo.id})
           </Text>
         </View>
       ) : (
         <View style={{ marginBottom: 12 }}>
           <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#888' }}>
-            Creando un nuevo mix RAL
+            Nuevo mix RAL
           </Text>
         </View>
       )}
+      
       <View style={styles.inputRow}>
         <Text style={styles.inputLabel}>Precio de Venta (con IVA):</Text>
         <TextInput
@@ -139,6 +145,16 @@ export default function RalReportScreen() {
           placeholder="Precio de Venta"
         />
       </View>
+      <View style={styles.inputRow}>
+        <Text style={styles.inputLabel}>Precio de Lista de Base:</Text>
+        <TextInput
+          style={styles.inputSalePrice}
+          keyboardType="numeric"
+          value={baseListPrice}
+          onChangeText={setBaseListPrice}
+          placeholder="Precio de Lista de Base"
+        />
+      </View>
       <View style={styles.table}>
         <View style={styles.headerRow}>
           <Text style={styles.cellLabel}>Concepto</Text>
@@ -146,9 +162,9 @@ export default function RalReportScreen() {
           <Text style={styles.cellValue}>+IVA</Text>
         </View>
         <Row label="Costo Total Colorantes" value={`$${colorantTotal.toFixed(2)}`} iva={withIVA(colorantTotal)} />
-        <Row label="Precio de Lista de Base" value={`$${BASE_LIST_PRICE.toFixed(2)}`} iva={withIVA(BASE_LIST_PRICE)} />
+        <Row label="Precio de Lista de Base" value={`$${baseListPriceNumber.toFixed(2)}`} iva={withIVA(baseListPriceNumber)} />
         <Row label="Descuento Semestral" value={''} iva={''} />
-        <Row label="Costo de Base" value={`$${BASE_COST.toFixed(2)}`} iva={withIVA(BASE_COST)} />
+        <Row label="Costo de Base" value={`$${baseCostNumber.toFixed(2)}`} iva={withIVA(baseCostNumber)} />
         <Row label="TOTAL BASE  +  COLORANTE" value={`$${totalBaseColorant.toFixed(2)}`} iva={withIVA(totalBaseColorant)} />
         <Row label="Precio de Venta" value={`$${salePriceNumber.toFixed(2)}`} iva={withIVA(salePriceNumber)} />
         <Row label="PRECIO DE VENTAS" value={`$${salesPrice.toFixed(2)}`} iva={withIVA(salesPrice)} />
