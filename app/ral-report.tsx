@@ -34,7 +34,7 @@ export default function RalReportScreen() {
     });
   }, []);
 
-  // Set salePrice from params only once
+  // Set salePrice, points, and editing info from params.mix if present
   useEffect(() => {
     if (params.mix) {
       const mix = JSON.parse(params.mix as string);
@@ -42,11 +42,17 @@ export default function RalReportScreen() {
       setSalePrice(mix.salePrice ? (mix.salePrice * 1.16).toFixed(2) : '1000.00');
       if (mix.id && mix.name) {
         setEditingMixInfo({ id: mix.id, name: mix.name });
+        setMixId(mix.id);      // Pre-populate ID
+        setMixName(mix.name);  // Pre-populate Name
       } else {
         setEditingMixInfo(null);
+        setMixId('');
+        setMixName('');
       }
     } else {
       setEditingMixInfo(null);
+      setMixId('');
+      setMixName('');
     }
   }, [params.mix]);
 
@@ -165,13 +171,16 @@ export default function RalReportScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 12 }}>Guardar RAL Mix</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 12 }}>
+              Guardar RAL Mix
+            </Text>
             <TextInput
               placeholder="ID único"
               value={mixId}
               onChangeText={setMixId}
-              style={styles.input}
+              style={[styles.input, editingMixInfo?.id ? { backgroundColor: '#eee', color: '#888' } : {}]}
               autoCapitalize="none"
+              editable={!editingMixInfo?.id} // Disable if editing existing mix
             />
             <TextInput
               placeholder="Nombre del mix"
