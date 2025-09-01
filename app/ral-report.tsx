@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Print from 'expo-print';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../components/ThemedText';
-import * as Print from 'expo-print';
 
 const COLORANTS = [
   { name: 'Amarillo', code: 'AXX', color: '#FFF200' },
@@ -129,35 +129,78 @@ export default function RalReportScreen() {
   // Print handler (for now, just alert or implement sharing/printing as needed)
   const handlePrint = async () => {
     // Generate colorant table rows with colored rectangles and codes
-    const colorantRows = COLORANTS
-      .map(colorant => {
-        const { name, code, color } = colorant;
-        const y = points[name]?.y || '0';
-        const pts = points[name]?.pts || '0';
-        return `
-          <tr>
-            <td style="border:1px solid #ddd; padding:8px; display:flex; align-items:center;background-color:${color || '#fff'};">
-              <span style="display:inline-block;width:18px;height:18px;background:${color || '#fff'};border-radius:4px;border:1px solid #ccc;margin-right:6px;vertical-align:middle;"></span>
-              <span style="font-weight:bold;">${code || ''}</span>
-              <span style="margin-left:8px;">${name}</span>
-            </td>
-            <td style="border:1px solid #ddd; padding:8px; text-align:right;">${y}</td>
-            <td style="border:1px solid #ddd; padding:8px; text-align:right;">${pts}</td>
-          </tr>
-        `;
-      })
-      .join('');
+    const colorantRows =  COLORANTS.map(colorant => {
+          const { name, code, color } = colorant;
+          const y = points[name]?.y || '0';
+          const pts = points[name]?.pts || '0';
+          return `
+            <tr>
+              <td class="color-cell">
+                <span class="color-box" style="background:${color || '#fff'}"></span>
+                <span style="font-weight:bold;">${code || ''}</span>
+                <span style="margin-left:6px;">${name}</span>
+              </td>
+              <td style="text-align:right;">${y}</td>
+              <td style="text-align:right;">${pts}</td>
+            </tr>
+          `;
+        }).join('');
 
     const printContent = `
+      <style>
+        @page {
+          size: Letter;
+          margin: 0.5in;
+        }
+        body {
+          font-family: Arial, sans-serif;
+          font-size: 13px;
+          margin: 2em;
+          padding: 0;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        h1, h2 {
+          margin: 0.5em 0 0.3em 0;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 12px;
+        }
+        table.colorants {
+          width: 50%;
+          border-collapse: collapse;
+          font-size: 9px;
+        }
+        th, td {
+          padding: 6px;
+          border: 1px solid #ddd;
+        }
+        .color-cell {
+          display: flex;
+          align-items: center;
+          padding: 4px;
+        }
+        .color-box {
+          display: inline-block;
+          width: 14px;
+          height: 14px;
+          border-radius: 3px;
+          border: 1px solid #ccc;
+          margin-right: 5px;
+          vertical-align: middle;
+        }
+      </style>
       <h1>Reporte de Costo de Producción RAL</h1>
       <p><strong>Mix:</strong> ${editingMixInfo?.name} (ID: ${editingMixInfo?.id})</p>
       <p><strong>Fecha:</strong> ${new Date().toLocaleString()}</p>
-      <h2>Tabla de Colorantes</h2>
-      <table style="width:100%; border-collapse:collapse; margin-bottom:24px;">
+      <h3>Tabla de Colorantes</h3>
+      <table class="colorants">
         <tr style="background-color:#f2f2f2; font-weight:bold;">
-          <th style="border:1px solid #ddd; padding:8px;">Colorante</th>
-          <th style="border:1px solid #ddd; padding:8px;">Y's</th>
-          <th style="border:1px solid #ddd; padding:8px;">Puntos</th>
+          <th>Colorante</th>
+          <th>Y's</th>
+          <th>Puntos</th>
         </tr>
         ${colorantRows}
       </table>
